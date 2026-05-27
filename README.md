@@ -2,16 +2,12 @@
 
 Notes and mental models for going from *"I know batch Spark"* to *"I can design and
 operate production streaming pipelines."* Built while working through the
-Rock-the-JVM **"Spark Streaming with Scala"** course and a beginner → senior Data
+[Rock-the-JVM](https://courses.rockthejvm.com/p/the-spark-bundle) **"Spark Streaming with Scala"** course and a beginner → senior Data
 Engineer roadmap, with everything **derived, not asserted** — the goal is correct
 mental models you can re-derive, not facts you memorize.
 
 **Focus:** Spark **Structured Streaming** (DStreams referenced only for contrast).
-**Language:** Scala. **Course runtime:** Spark 3.x. **Project runtime:** Spark 4.x
-(Databricks Free Edition) — files flag where that version gap changes the picture.
-
-Written so any experience level can read it: precise terms are kept (a senior reader
-and interviewers expect them) but each is unpacked in plain language on first use.
+**Language:** Scala.
 
 ---
 
@@ -22,7 +18,6 @@ and interviewers expect them) but each is unpacked in plain language on first us
   order.
 - Each tier folder has a short **`README.md` index**; each concept file ends with a
   **"Prove you got it"** self-check (answers in a collapsible block).
-- Diagrams use **Mermaid** (renders natively on GitHub).
 
 ---
 
@@ -87,8 +82,7 @@ A foundations course makes you **fluent in the Structured Streaming model and
 event-time/state semantics.** It does **not** cover production engineering
 (exactly-once wiring, state-store internals, monitoring, testing, deployment), the
 **lakehouse/CDC integration layer**, the **Spark 4.0 `transformWithState` API**, or
-**architecture-level design**. Those four areas *are* the senior delta — and they
-are exactly what the portfolio project should demonstrate.
+**architecture-level design**. Those four areas *are* the senior delta .
 
 ---
 
