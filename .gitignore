@@ -1,0 +1,15 @@
+@"
+# IntelliJ
+.idea/
+*.iml
+out/
+
+# Scala / SBT
+target/
+project/target/
+.bsp/
+
+# OS
+.DS_Store
+Thumbs.db
+"@ | Set-Content .gitignore -Encoding utf8
