@@ -31,4 +31,4 @@ the files are readable cold by any experience level without losing precision.
 > *Introduction* and early sections. The course teaches the *API*; this tier makes
 > sure the *why* underneath it is solid.
 
-[← Back to repo root](../README.md)
+[← Back to repo root](../../README.md)
