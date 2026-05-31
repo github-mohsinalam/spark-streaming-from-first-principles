@@ -1,15 +1,24 @@
-@"
+# sbt
+target/
+project/target/
+project/project/
+
 # IntelliJ
 .idea/
 *.iml
-out/
 
-# Scala / SBT
-target/
-project/target/
+# Eclipse / Metals
+.metals/
+.bloop/
 .bsp/
 
-# OS
+# macOS
 .DS_Store
-Thumbs.db
-"@ | Set-Content .gitignore -Encoding utf8
+
+# Local data written by demos (we'll write to /tmp by default,
+# but if anyone overrides to a repo-relative path, ignore it)
+data/
+checkpoints/
+spark-warehouse/
+metastore_db/
+derby.log
