@@ -1,6 +1,6 @@
 import org.apache.spark.sql.SparkSession
 
-object Playground extends App{
+object Playground{
 
   val spark = SparkSession.builder()
     .master("local[*]")
@@ -16,7 +16,12 @@ object Playground extends App{
 
   val df = data.toDF("Id","Numbers")
 
-  df.show
+  def main(args: Array[String]): Unit = {
+    // df.show
+
+
+
+  }
 
 
 
