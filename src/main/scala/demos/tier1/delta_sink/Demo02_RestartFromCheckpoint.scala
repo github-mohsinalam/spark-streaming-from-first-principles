@@ -150,8 +150,8 @@ object Demo02_RestartFromCheckpoint {
     println("\n--- After Phase 2 ---")
     reportState(spark, label = "Phase 2 final")
 
-    //println("\n=== Delta log after both phases ===")
-    //DeltaLogInspector.inspect(tablePath)
+    println("\n=== Checkpoint / Delta alignment ===")
+    CheckpointInspector.inspect(checkpointPath, tablePath)
 
     println("\n=== Contiguity check ===")
     contiguityCheck(spark)
