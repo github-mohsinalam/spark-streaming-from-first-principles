@@ -136,7 +136,7 @@ object Demo01_AppendBronzeIngest {
   private def buildSpark(): SparkSession = {
     val spark = SparkSession.builder()
       .appName("Demo01_AppendBronzeIngest")
-      .master("local[*]")
+      .master("local[2]")
       .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
       .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
       .config("spark.ui.showConsoleProgress", "false")
