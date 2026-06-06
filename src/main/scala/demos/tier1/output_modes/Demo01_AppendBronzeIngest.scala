@@ -95,7 +95,7 @@ object Demo01_AppendBronzeIngest {
       .format("delta")
       .outputMode("append")
       .option("checkpointLocation", checkpointPath)
-      .trigger(Trigger.ProcessingTime("5 seconds"))
+      .trigger(Trigger.ProcessingTime("10 seconds"))
       .start(bronzePath)
 
     println(s"Streaming started. Query id: ${query.id}")
@@ -136,7 +136,7 @@ object Demo01_AppendBronzeIngest {
   private def buildSpark(): SparkSession = {
     val spark = SparkSession.builder()
       .appName("Demo01_AppendBronzeIngest")
-      .master("local[2]")
+      .master("local[4]")
       .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
       .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
       .config("spark.ui.showConsoleProgress", "false")
