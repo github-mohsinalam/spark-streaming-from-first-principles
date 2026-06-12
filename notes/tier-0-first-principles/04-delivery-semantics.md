@@ -186,15 +186,20 @@ flowchart TB
 Steps **3** and **7** are the only writes to the checkpoint, and one happens
 *before* the work, the other *after*. Everything between is the work.
 
-- **Step 2 — plan.** Ask Kafka: "I last finished at offset X; what is the latest
-  available?" → Y. This batch *owns* the half-open range `(X, Y]`, frozen before
-  any read. (`maxOffsetsPerTrigger` caps Y so a post-downtime catch-up does not
+- **Step 2 — plan.** Read X from the previous batch's offset log entry — by
+  Spark's convention this is the **next offset to read**, i.e. the position
+  this batch starts from. Ask Kafka: "what is the latest offset available
+  now?" → Y. This batch *owns* the range from offset X up to but not
+  including Y — equivalently `[X, Y)` — frozen before any read.
+  (`maxOffsetsPerTrigger` caps Y so a post-downtime catch-up does not
   swallow a billion records — the backpressure knob, Tier 4.)
 - **Step 3 — write the offset log (write-ahead).** *Before reading anything*,
-  durably record "batch N will process `(X, Y]`." So that after any later crash,
-  recovery knows *exactly* what batch N was supposed to be — the same range,
-  deterministically.
-- **Step 4 — read.** Read `(X, Y]`. The engine tracks these offsets **in its own
+  durably record this batch's **end position Y** (the next offset to read
+  *after* this batch finishes) in the offset log for batch N. The start of
+  the range is not stored explicitly — it is the end position of batch N-1's
+  offset log entry. After any later crash, recovery reconstructs batch N's
+  range as `[offsets[N-1], offsets[N])` — same range, deterministically.
+- **Step 4 — read.** Read `[X, Y)`. The engine tracks these offsets **in its own
   checkpoint, not via Kafka consumer-group commits** — because exactly-once needs
   offset position and output committed *together*, which only one coordinated log
   can do.
@@ -209,9 +214,12 @@ Steps **3** and **7** are the only writes to the checkpoint, and one happens
 
 ### What's physically in the checkpoint
 
-- **offset log** — one entry per batch: the offset range that batch *intends* to
-  process, plus reproducibility metadata (notably the event-time **watermark** at
-  batch start). Written at step 3, *ahead* of processing.
+- **offset log** — one entry per batch: the **end position** of that batch's
+  offset range, per `(topic, partition)`, plus reproducibility metadata (notably
+  the event-time **watermark** at batch start). Written at step 3, *ahead* of
+  processing. The range a batch covers is the half-open interval from the
+  previous batch's end to this batch's end — recorded implicitly by storing
+  endpoints only.
 - **commit log** — one entry per *completed* batch, written at step 7.
 - **state store** — versioned state for any stateful operator, one version per
   batch.
@@ -226,7 +234,7 @@ Steps **3** and **7** are the only writes to the checkpoint, and one happens
 ### Why the ordering *is* the guarantee — three crash points
 
 - **Crash after step 3, before step 6.** Restart sees batch N in the offset log,
-  no commit entry → replays the *same* range `(X, Y]`, commits to Delta. The
+  no commit entry → replays the *same* range `[X, Y)`, commits to Delta. The
   original never committed, so no duplicate. No loss, no duplication.
 - **Crash after step 6, before step 7 (the subtle one).** Restart again sees no
   commit entry → replays and *re-commits to Delta*. But Delta already committed

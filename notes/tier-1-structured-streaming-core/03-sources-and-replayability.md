@@ -155,11 +155,17 @@ spark.readStream
 
 This is the source that earns the exactly-once story.
 
-**Addressable positions:** Kafka offsets — a `(topic, partition, offset)`
-triple identifies every record uniquely and durably. The engine records
-ranges like *"partition 0: offsets 1000–1500, partition 1: offsets 850–1400"*
-in the offset log. These triples are the canonical "position" abstraction in
-streaming.
+**Addressable positions:** Kafka offsets — every record is uniquely
+identified by a `(topic, partition, offset)` triple. The engine records,
+per micro-batch, the **end position** of each `(topic, partition)` it
+consumed — a JSON structure like
+`{"events":{"0":1500,"1":1400}}` meaning *"after this batch, partition 0
+of `events` is at position 1500 and partition 1 is at position 1400."*
+The value is the **next offset to read** (exclusive end), which is also
+the resume position on restart. The range a batch covered is implicit:
+end position from `offsets/N-1` to end position in `offsets/N`. These
+offsets are the canonical "position" abstraction in streaming — durable,
+per-partition, monotonically increasing.
 
 **Deterministic re-read:** yes, within the broker's **retention window**.
 Kafka stores records on disk for a configured time (default 7 days) or size.
