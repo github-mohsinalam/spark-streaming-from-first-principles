@@ -26,20 +26,48 @@ From the chain you have already built:
 replayable source → checkpoint (offset + commit log) → idempotent/transactional sink
 ```
 
-The sink must do one of two things when batch N is delivered to it a second
-time (after a crash before commit):
+A sink closes the exactly-once chain through some combination of two properties.
+The properties are independent: a sink can have one, the other, or both. The
+strongest sinks have both.
 
-- **Idempotency.** Recognise it has already written batch N's output (via
-  `batchId` or a deterministic key on the records) and *do nothing* the
-  second time. The state of the sink after one write equals the state after
-  two writes.
-- **Transactionality.** Make the write of batch N's output atomic with the
-  *commit*, so that either both happen or neither happens. On replay, the
-  engine sees the commit was never made and writes again; otherwise, the
-  previous write is already complete and the engine skips.
+- **Idempotency.** When batch N is delivered a second time, the sink recognises
+  it has already written that batch (via `batchId` or a deterministic key on
+  the records) and *does nothing* the second time. The state of the sink after
+  one write equals the state after two writes. This is about *what the sink
+  does* when re-invoked.
+- **Transactionality.** The write of batch N is atomic — either the entire
+  batch lands or none of it does. There is no "partial commit" state visible
+  to readers, and on crash mid-write the partial work rolls back. This is
+  about *what the sink stores* per commit.
 
-Two mechanisms, one outcome: **batch N has exactly-once effect on the sink,
-regardless of how many times the engine retries it.**
+These properties protect against different failure windows:
+
+- **Transactionality alone** protects against crashes *during* a commit. The
+  table never ends up in a half-written state. But the engine still has to
+  know "did I successfully commit batch N?" to avoid retrying — without
+  idempotency, a retry of an already-committed batch produces duplicates.
+- **Idempotency alone** protects against the engine retrying a batch it
+  already wrote. But without transactionality, a crash mid-commit can leave
+  the sink in a state that's neither "before" nor "after," and idempotency
+  can't recognise it cleanly.
+- **Both together** close the gap completely. The narrow window between
+  "sink write succeeded" and "engine recorded the success in its commit log"
+  is exactly where both properties pull their weight: transactionality
+  guarantees the sink write either fully happened or fully didn't;
+  idempotency lets the sink recognise its own prior commit on retry and
+  skip.
+
+Many production sinks have just one of these properties — `INSERT ... ON
+CONFLICT DO NOTHING` is idempotent but not transactional (each row is its
+own commit); a bulk JDBC transaction without `ON CONFLICT` is transactional
+but not idempotent on retry. **Delta Lake is the rare sink that provides
+both**: atomic protocol-level commits give transactionality, and the
+`txn(appId, batchId)` action layered on top gives streaming-aware
+idempotency. Concept 4.5 unpacks that mechanism in detail.
+
+The contract for any sink in the exactly-once chain: **provide enough of
+these two properties that batch N has exactly-once effect, regardless of
+how many times the engine retries it.**
 
 > **The unit of idempotency is the batch, not the record.** The engine's
 > recovery unit is the batch — so you think `batchId`-by-`batchId`, not

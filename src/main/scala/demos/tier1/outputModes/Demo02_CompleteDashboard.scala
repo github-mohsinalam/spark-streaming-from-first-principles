@@ -1,4 +1,4 @@
-package demos.tier1.output_modes
+package demos.tier1.outputModes
 
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.{avg, col, count}

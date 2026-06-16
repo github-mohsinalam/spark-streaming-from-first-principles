@@ -1,4 +1,4 @@
-package demos.tier1.output_modes
+package demos.tier1.outputModes
 
 import java.time.Instant
 import scala.util.Random

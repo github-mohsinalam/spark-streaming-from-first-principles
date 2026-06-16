@@ -1,4 +1,4 @@
-package demos.tier1.delta_sink
+package demos.tier1.deltaSink
 
 import java.nio.file.{Files, Path, Paths}
 import scala.jdk.CollectionConverters._

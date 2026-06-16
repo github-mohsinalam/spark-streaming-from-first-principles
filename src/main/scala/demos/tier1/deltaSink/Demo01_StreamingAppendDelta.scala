@@ -1,4 +1,4 @@
-package demos.tier1.delta_sink
+package demos.tier1.deltaSink
 
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.Trigger
