@@ -6,6 +6,36 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.streaming.Trigger
 
+/**
+ * Demo — File sink with `_spark_metadata` inspection
+ *
+ * What this demo proves:
+ *   The file sink achieves exactly-once-effect for append-only writes via an
+ *   atomic per-batch manifest file at `_spark_metadata/<batchId>`. Each
+ *   manifest is a file listing the data files committed by that batch with
+ *   `"action": "add"`. The manifest is what makes the sink
+ *   idempotent on retry; data files are written directly to their final
+ *   paths with no staging directory.
+ *
+ * What to do while it runs:
+ *   1. Watch `/tmp/file-sink/` — `part-*.json` files appear directly in the
+ *      output directory each batch, with UUID-suffixed names. No
+ *      `_temporary/` staging dir is created.
+ *   2. Inspect `/tmp/file-sink/_spark_metadata/` — one file per batch named
+ *      by `batchId` (`0`, `1`, `2`, ...). `cat` any of them to see the
+ *      manifest format: `v1` header line, then one JSON action entry per
+ *      data file produced by that batch.
+ *   3. Compare against `/tmp/file-sink/_checkpoint/offsets/` and
+ *      `/tmp/file-sink/_checkpoint/commits/` — three logs (offset, commit,
+ *      manifest) line up per `batchId`.
+ *
+ *
+ * To run:
+ *   1. Start the Kafka sensor producer in a terminal
+ *   2. Then this demo in another terminal
+ *   3. Ctrl-C to stop. Inspect /tmp/file-sink/ and /tmp/file-sink/_spark_metadata/.
+ */
+
 object FileSinkDemo {
 
   System.setProperty("hadoop.home.dir", "C:\\Program Files\\hadoop")
@@ -57,7 +87,29 @@ object FileSinkDemo {
       .trigger(Trigger.ProcessingTime("10 seconds"))
       .start(tablePath)
 
-    //Write a progress thread
+    println(s"Streaming query : ${query.id} started....")
+
+    val progressThread = new Thread(() => {
+      try {
+        while (query.isActive) {
+          Thread.sleep(10000)
+          val lastProgress = query.lastProgress
+          if (lastProgress != null) {
+            println(s"[progress] batchId = ${lastProgress.batchId} " +
+              s"inputRows = ${lastProgress.numInputRows} " +
+              s"rate = ${"%.1f".format(lastProgress.processedRowsPerSecond)} rows/sec"
+            )
+          }
+        }
+      } catch {
+        case _: InterruptedException =>
+      }
+    })
+
+    progressThread.setDaemon(true)
+    progressThread.start()
+
+    query.awaitTermination()
 
   }
 
