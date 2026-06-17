@@ -3,7 +3,7 @@ package demos.tier1.outputModes
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.{col, from_json, current_timestamp}
 import org.apache.spark.sql.streaming.Trigger
-import org.apache.spark.sql.types._
+import common.payloadSchema
 
 /**
  * Demo 01 — Kafka → bronze Delta in `append` mode.
@@ -43,15 +43,7 @@ object Demo01_AppendBronzeIngest {
   // this consumer (which parses JSON shaped this way). The case class
   // `SensorReading` is the Scala-side mirror of this schema, but at the
   // Catalyst plan level we declare it as a `StructType` here.
-  private val payloadSchema: StructType = StructType(Array(
-    StructField("sensorId",    StringType,    nullable = false),
-    StructField("roomId",      StringType,    nullable = false),
-    StructField("buildingId",  StringType,    nullable = false),
-    StructField("eventTime",   TimestampType, nullable = false),
-    StructField("temperature", DoubleType,    nullable = false),
-    StructField("humidity",    DoubleType,    nullable = false),
-    StructField("occupied",    BooleanType,   nullable = false)
-  ))
+
 
   def main(args: Array[String]): Unit = {
     val spark = buildSpark()

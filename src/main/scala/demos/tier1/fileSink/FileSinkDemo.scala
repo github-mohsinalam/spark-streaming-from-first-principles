@@ -1,6 +1,7 @@
 package demos.tier1.fileSink
 
 
+import common.payloadSchema
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions._
@@ -46,15 +47,7 @@ object FileSinkDemo {
   private val kafkaBootstrap = "localhost:9092"
   private val kafkaTopic     = "sensor-events"
 
-  private val payloadSchema: StructType = StructType(Array(
-    StructField("sensorId",    StringType,    nullable = false),
-    StructField("roomId",      StringType,    nullable = false),
-    StructField("buildingId",  StringType,    nullable = false),
-    StructField("eventTime",   TimestampType, nullable = false),
-    StructField("temperature", DoubleType,    nullable = false),
-    StructField("humidity",    DoubleType,    nullable = false),
-    StructField("occupied",    BooleanType,   nullable = false)
-  ))
+
 
   val spark: SparkSession = SparkSession.builder()
     .appName("DemoFileSink")

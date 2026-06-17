@@ -1,13 +1,13 @@
-package demos.tier1.outputModes
+package common
 
-import java.time.Duration
-import java.util.Properties
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.{ObjectMapper, SerializationFeature}
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
 import org.apache.kafka.common.serialization.StringSerializer
+
+import java.time.Duration
+import java.util.Properties
 
 /**
  * Synthetic sensor fleet → Kafka.
