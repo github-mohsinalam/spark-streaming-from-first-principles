@@ -102,7 +102,7 @@ SparkSession. Same story as console: not durable, not idempotent, **for
 tests only**. We will see this again in Tier 5 with `MemoryStream` for
 deterministic streaming tests.
 
-### File sink — append-only, idempotent via manifests
+### File sink — append-only, exactly-once via manifests
 
 ```scala
 .writeStream.format("parquet").option("path", "/out").outputMode("append").start()
@@ -113,6 +113,9 @@ sink writes a **manifest file** per batch listing which output files belong
 to batch N. On replay, if the manifest for batch N already exists, the
 engine skips re-writing. The manifest is the sink's idempotency token,
 keyed by `batchId`.
+>The Spark engine creates a directory **_spark_metadata** in side the base directory.
+>A **manifest file** per batch is created here.Files are structurally same(file name is batchId) as offset and
+>commit log files in checkpoint directory.
 
 Limitations:
 
@@ -144,9 +147,7 @@ producer (covered below).
 
 ### JDBC sink — does not exist
 
-There is no `.format("jdbc")` for `writeStream`. The course covers JDBC by
-way of `foreachBatch` precisely because Spark's authors did not ship one —
-and that omission is **correct**. There is no general way to do an
+There is no `.format("jdbc")` for `writeStream`. There is no general way to do an
 idempotent JDBC write that works across all databases. Postgres has
 `ON CONFLICT`, MySQL has `ON DUPLICATE KEY UPDATE`, SQL Server has
 `MERGE`, Oracle has `MERGE`, SQLite has `INSERT OR REPLACE`. The engine
