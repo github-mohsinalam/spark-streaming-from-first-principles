@@ -113,7 +113,7 @@ sink writes a **manifest file** per batch listing which output files belong
 to batch N. On replay, if the manifest for batch N already exists, the
 engine skips re-writing. The manifest is the sink's idempotency token,
 keyed by `batchId`.
->The Spark engine creates a directory **_spark_metadata** in side the base directory.
+>The Spark engine creates a directory **_spark_metadata** inside the base directory.
 >A **manifest file** per batch is created here.Files are structurally same(file name is batchId) as offset and
 >commit log files in checkpoint directory.
 
@@ -171,7 +171,7 @@ You pass a function. The engine calls it **once per micro-batch**, passing:
 1. **`Dataset[T]`** — the output of the streaming query for *this
    micro-batch*, materialised as an ordinary, bounded `Dataset`. Inside
    the function, you can do *anything you can do in batch Spark*.
-2. **`Long`** — the `batchId`. Monotonically increasing across batches.
+2. **`Long`** — the `batchId`. It is taken from offset log,and thus it is guaranteed that same **`batchId`** will have same **`Dataset[T]`**.
    **This is the idempotency token.**
 
 That is the whole API. Three implications.
@@ -274,7 +274,28 @@ dead-letter queues.
 > Persist once, reuse many times, unpersist.
 
 ---
+### Output mode and `foreachBatch`
 
+A common misconception: `foreachBatch` "disables" the output mode question.
+It does not. The `Dataset[T]` your function receives **is** the streaming
+query's output for that micro-batch — so what shows up in `df` depends on
+what output mode the streaming engine planned for. Output mode is a property
+of the query, not of the sink, and `foreachBatch` does not suspend that.
+
+Two cases:
+
+- **Stateless upstream** (filter, map, project, parse): the only legal mode
+  is `append`, which is the default. Every input row becomes a row in `df`
+  once and is never revised.
+- **Stateful upstream** (`groupBy` + watermark,
+  `dropDuplicatesWithinWatermark`, stream-stream join):  `update` mode is the canonical choice when
+  pairing with an upsert sink — the streaming engine emits the changed rows,
+  `foreachBatch` receives them in `df`, and a `MERGE` upserts them by key.
+  That's the `update` + `foreachBatch` + `MERGE` pattern.
+
+The rule of thumb:`foreachBatch` is freedom on the *write side* — what to do with the rows.
+The `outputMode` governs the *emission side* — which rows the engine puts
+into `df` in the first place.
 ## `foreachBatch` vs `foreach`
 
 A sibling API, `foreach`, takes a `ForeachWriter[T]` and operates
@@ -282,8 +303,7 @@ A sibling API, `foreach`, takes a `ForeachWriter[T]` and operates
 necessary (a non-batchable HTTP endpoint with strict ordering, for
 example). It is lower-level and rarely the right choice for data
 engineering. `foreachBatch` lets you treat the micro-batch as a bounded
-`DataFrame` and use all of batch Spark; `foreach` does not. For the
-portfolio project, default to `foreachBatch`.
+`DataFrame` and use all of batch Spark; `foreach` does not. 
 
 ---
 
