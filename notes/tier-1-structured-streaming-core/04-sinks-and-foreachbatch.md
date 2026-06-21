@@ -273,7 +273,6 @@ dead-letter queues.
 > source for that batch — for Kafka, that means re-reading and re-parsing.
 > Persist once, reuse many times, unpersist.
 
----
 ### Output mode and `foreachBatch`
 
 A common misconception: `foreachBatch` "disables" the output mode question.
@@ -296,6 +295,7 @@ Two cases:
 The rule of thumb:`foreachBatch` is freedom on the *write side* — what to do with the rows.
 The `outputMode` governs the *emission side* — which rows the engine puts
 into `df` in the first place.
+---
 ## `foreachBatch` vs `foreach`
 
 A sibling API, `foreach`, takes a `ForeachWriter[T]` and operates
@@ -424,20 +424,6 @@ record exactly once with no dedup logic of their own.
 consumers — a downstream team that does not control its dedup logic, or
 a regulatory requirement for exactly-once delivery on the wire. For
 internal pipelines, Option A almost always wins on cost/benefit.
-
-### Recommendation for the portfolio project
-
-Use **Option A** by default. If you want to demonstrate awareness of
-Option B, mention it in an Architecture Decision Record:
-
-> We chose Option A because our final sink is Delta with `MERGE` on
-> `event_id`, which dedupes at the lakehouse layer. Option B
-> (transactional producer) would have provided on-the-wire exactly-once
-> but at the cost of throughput and operational complexity, neither of
-> which is justified for an internal pipeline with one known consumer.
-
-That sentence alone signals senior-level thinking.
-
 ---
 
 ## Sinks measured against the contract — summary
@@ -449,7 +435,7 @@ That sentence alone signals senior-level thinking.
 | `file` (parquet/json/…)  | yes (manifest per batch) | `append` only             | append-only lakes; needs compaction         |
 | `kafka`                  | **no** (default)         | `append`, `update`        | requires Option A or B for E1               |
 | `jdbc` (does not exist)  | n/a                      | n/a                       | use `foreachBatch` + `MERGE`/`ON CONFLICT`  |
-| **`foreachBatch`**       | **yours to design**      | any (you control output)  | the production answer                       |
+| **`foreachBatch`**       | **yours to design**      | per upstream semantics (Concept 5 legality)  | the production answer                       |
 
 Every production-grade sink is either Delta/Iceberg's transactional
 `MERGE` or `foreachBatch` wrapping a sink-specific idempotent write.
@@ -464,21 +450,42 @@ You now have all three legs:
 ```mermaid
 flowchart LR
     A["Kafka<br/>(replayable)"] --> B["Checkpoint<br/>offset + commit log"]
-    B --> C["foreachBatch<br/>(batchId-keyed idempotency)"]
-    C --> D1["JDBC<br/>ON CONFLICT"]
-    C --> D2["Delta MERGE<br/>on event_id"]
-    C --> D3["Kafka — Option A<br/>(downstream dedup)"]
-    C --> D4["Kafka — Option B<br/>(transactional producer)"]
+    B --> C1["First-class streaming sink<br/>(writes its own idempotency)"]
+    B --> C2["foreachBatch<br/>(you write the idempotency)"]
+    C1 --> D1["format('delta')<br/>append/update/complete<br/>(txn action — Concept 4.5)"]
+    C1 --> D2["format('parquet') etc.<br/>(manifest per batch — Concept 4)"]
+    C2 --> E1["JDBC<br/>ON CONFLICT"]
+    C2 --> E2["Delta MERGE<br/>on event_id"]
+    C2 --> E3["Kafka — Option A<br/>(downstream dedup)"]
+    C2 --> E4["Kafka — Option B<br/>(transactional producer)"]
 ```
 
-The `batchId` the engine passes to your function is *the same `batchId`*
-that appears in the commit log. On retry, the engine knows batch N was
-started but not committed; it re-runs your function with the same
-`batchId`; your function recognises the duplicate (via `MERGE`,
-`ON CONFLICT`, or a processed-batches table) and absorbs it. End-to-end
-exactly-once effect, no record-level guarantees required.
+Two routes through the chain, picked by what the sink can do:
 
-This is the senior-grade pattern. Internalise it.
+- **First-class streaming sinks** (`format("delta")`, `format("parquet")`,
+  etc.) close the chain *without* `foreachBatch`. They write their own
+  idempotency token alongside the data — Delta writes a `txn(appId, batchId)`
+  action atomically with the commit [deltaSinkDemo](../../src/main/scala/demos/tier1/deltaSink/Demo01_StreamingAppendDelta.scala); the file sink writes a
+  per-batch manifest [FileSinkDemo](../../src/main/scala/demos/tier1/fileSink/FileSinkDemo.scala). For raw append-only ingest this is
+  the simplest path: a single `writeStream.format("delta").outputMode("append")`
+  closes the chain with no per-batch code from you.
+
+- **`foreachBatch`** is the route when the sink has no streaming-aware
+  idempotency primitive of its own — most JDBC targets, Kafka with on-the-wire
+  exactly-once requirements, or Delta with non-idempotent `MERGE` operations
+  (running accumulators, see [Concept 4.5](./04.5-delta-as-streaming-sink.md)). You receive the `batchId` and use
+  it to make the write idempotent at the application layer.
+
+The `batchId` the engine passes — whether visible to you through
+`foreachBatch` or used internally by a first-class sink — is the same
+`batchId` that appears in Spark's commit log. That alignment is what makes
+the whole chain converge on exactly-once effect regardless of route.
+
+The decision: **reach for `foreachBatch` only when a first-class streaming
+sink can't close the chain for you.** For append-only Delta ingest, the
+streaming sink wins on simplicity. For upserts, multiple downstream targets,
+or sinks without `txn`-style support, `foreachBatch` is the universal
+escape hatch.
 
 ---
 
