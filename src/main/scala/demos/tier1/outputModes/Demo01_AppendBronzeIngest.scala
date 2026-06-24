@@ -1,9 +1,9 @@
 package demos.tier1.outputModes
 
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions.{col, from_json, current_timestamp}
+import org.apache.spark.sql.functions.{col, current_timestamp, from_json}
 import org.apache.spark.sql.streaming.Trigger
-import common.payloadSchema
+import common.{payloadSchema, startProgressThread}
 
 /**
  * Demo 01 — Kafka → bronze Delta in `append` mode.
@@ -94,23 +94,7 @@ object Demo01_AppendBronzeIngest {
     println("Running for ~60 seconds. Ctrl-C to stop earlier.\n")
 
     // Print progress every few seconds so the demo isn't silent.
-    val progressThread = new Thread(() => {
-      try {
-        while (query.isActive) {
-          Thread.sleep(10000)
-          val lastProgress = query.lastProgress
-          if (lastProgress != null) {
-            println(s"[progress] batchId=${lastProgress.batchId} " +
-              s"inputRows=${lastProgress.numInputRows} " +
-              s"rate=${"%.1f".format(lastProgress.processedRowsPerSecond)} rows/sec")
-          }
-        }
-      } catch {
-        case _: InterruptedException => // graceful stop
-      }
-    })
-    progressThread.setDaemon(true)
-    progressThread.start()
+    startProgressThread(query)
 
     query.awaitTermination(60000)
     query.stop()

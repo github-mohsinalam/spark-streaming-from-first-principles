@@ -1,7 +1,7 @@
 package demos.tier1.fileSink
 
 
-import common.payloadSchema
+import common.{payloadSchema, startProgressThread}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions._
@@ -82,25 +82,7 @@ object FileSinkDemo {
 
     println(s"Streaming query : ${query.id} started....")
 
-    val progressThread = new Thread(() => {
-      try {
-        while (query.isActive) {
-          Thread.sleep(10000)
-          val lastProgress = query.lastProgress
-          if (lastProgress != null) {
-            println(s"[progress] batchId = ${lastProgress.batchId} " +
-              s"inputRows = ${lastProgress.numInputRows} " +
-              s"rate = ${"%.1f".format(lastProgress.processedRowsPerSecond)} rows/sec"
-            )
-          }
-        }
-      } catch {
-        case _: InterruptedException =>
-      }
-    })
-
-    progressThread.setDaemon(true)
-    progressThread.start()
+    startProgressThread(query)
 
     query.awaitTermination()
 

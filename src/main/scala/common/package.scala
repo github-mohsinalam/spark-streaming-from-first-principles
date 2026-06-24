@@ -1,3 +1,4 @@
+import org.apache.spark.sql.streaming.StreamingQuery
 import org.apache.spark.sql.types._
 
 package object common {
@@ -11,4 +12,26 @@ package object common {
     StructField("humidity",    DoubleType,    nullable = false),
     StructField("occupied",    BooleanType,   nullable = false)
   ))
+
+  def startProgressThread(query : StreamingQuery): Unit = {
+    val progressThread = new Thread(() => {
+      try {
+        while (query.isActive) {
+          Thread.sleep(10000)
+          val lastProgress = query.lastProgress
+          if (lastProgress != null) {
+            println(s"[progress] batchId=${lastProgress.batchId} " +
+              s"inputRows=${lastProgress.numInputRows} " +
+              s"rate=${"%.1f".format(lastProgress.processedRowsPerSecond)} rows/sec")
+          }
+        }
+      } catch {
+        case _: InterruptedException => // graceful stop
+      }
+    })
+    progressThread.setDaemon(true)
+    progressThread.start()
+    print(s"A progress thread started to track the progress of query : ${query.id}")
+
+  }
 }
