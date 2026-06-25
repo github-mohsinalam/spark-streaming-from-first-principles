@@ -186,6 +186,26 @@ semantics it cannot honour. This is the same correctness-gate behaviour as
 the streaming flag from Concept 1: illegal combinations fail at `start()`,
 not at runtime after consuming gigabytes.
 
+### A note on `dropDuplicates`: legal but operationally fragile
+
+The legality matrix marks `dropDuplicates` as legal in both `append` and
+`update` modes. That is true — its emission is one row per unique key,
+final on first occurrence, which satisfies `append`'s "never revised"
+contract. But legality is not sufficiency. The engine maintains the
+deduplication state keyed by every distinct value ever seen, and that
+state has **no eviction boundary**. A duplicate could arrive years later,
+so the engine cannot forget any key. On a high-cardinality stream
+(per-event-id, per-request-id, per-user-id) the state store grows
+linearly with the number of unique keys — gigabytes within days is
+realistic at production scale.
+
+>**The takeaway:** the legality matrix tells you what *runs*, not what *stays
+>healthy under load*. Several stateful operators are legal but maintain
+>unbounded state without a watermark — `dropDuplicates` is just the most
+>common one a developer is likely to reach for. Production-grade streaming
+>work means choosing watermarked variants whenever possible, which is
+>exactly what Tier 2 is about.
+
 ### Two derivations worth doing explicitly
 
 **Why `append` is illegal for an aggregation without a watermark.** The
