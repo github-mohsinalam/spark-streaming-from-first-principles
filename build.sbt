@@ -1,11 +1,12 @@
 // build.sbt
 
-ThisBuild / scalaVersion := "2.13.16"
+ThisBuild / scalaVersion := "2.13.18"
 ThisBuild / version      := "0.1.0-SNAPSHOT"
 ThisBuild / organization := "com.spark-streaming-fp"
 
-val sparkVersion = "4.0.0"
-val deltaVersion = "4.0.0"
+val sparkVersion = "4.1.2"
+val deltaVersion = "4.3.1"
+val scalaTestVersion = "3.2.20"
 
 lazy val root = (project in file("."))
   .settings(
@@ -14,7 +15,8 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-sql"              % sparkVersion,
       "org.apache.spark" %% "spark-sql-kafka-0-10"   % sparkVersion,
-      "io.delta"         %% "delta-spark"            % deltaVersion
+      "io.delta"         %% "delta-spark"            % deltaVersion,
+      "org.scalatest"    %% "scalatest"              % scalaTestVersion % Test
     ),
 
     // Spark 4 on JDK 17+ needs these to access internal JDK packages.
