@@ -22,3 +22,4 @@ checkpoints/
 spark-warehouse/
 metastore_db/
 derby.log
+Playground.scala
