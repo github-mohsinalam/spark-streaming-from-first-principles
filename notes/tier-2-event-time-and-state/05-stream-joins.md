@@ -219,4 +219,4 @@ migration notes rather than assuming.
 
 ---
 
-[← Concept 5: Watermarks Part 2](./04-watermarks-part2.md) · [Next: Deduplication →](./06-deduplication.md)
+[← Concept 4: Watermarks Part 2](./04-watermarks-part2.md) · [Next: Deduplication →](./06-de-duplication.md)
