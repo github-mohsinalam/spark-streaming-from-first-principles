@@ -184,4 +184,4 @@ subset) is the current-expertise signal.
 
 ---
 
-[← Concept 5: Streaming Joins](./05-stream-joins.md) · [Next: Arbitrary Stateful Processing (legacy) →](./07-arbitrary-stateful-legacy.md)
+[← Concept 5: Streaming Joins](./05-stream-joins.md) · [Next: Arbitrary Stateful Processing (legacy) →](./07-arbitrary-stateful-legacy-part1.md)
