@@ -411,4 +411,4 @@ imports; the pre-4.x path 404s.
 
 ---
 
-[← Part 1: Arbitrary State](06-arbitrary-stateful-legacy-part1.md) · [Next: Concept 7 — `transformWithState` →](07-transform-with-state-part.md)
+[← Part 1: Arbitrary State](06-arbitrary-stateful-legacy-part1.md) · [Next: Concept 7 — `transformWithState` →](07-transform-with-state.md)
