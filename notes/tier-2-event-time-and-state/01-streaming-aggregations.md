@@ -1,6 +1,6 @@
 # Streaming Aggregations
 
-> **Tier 2 · Concept 1 of 9**
+> **Tier 2 · Concept 1 of 7**
 > Where "stateful" stops being a label and becomes a concrete execution model.
 > The root cause of the two rules left unresolved in Tier 1.
 

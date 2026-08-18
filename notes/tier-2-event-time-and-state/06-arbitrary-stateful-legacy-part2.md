@@ -1,6 +1,6 @@
 # Arbitrary Stateful Processing (legacy) — Part 2: Timeouts
 
-> **Tier 2 · Concept 8 · Part 2 of 2**
+> **Tier 2 · Concept 6 of 7**
 > Part 1 gave arbitrary state (A) and hit a ceiling: the function is invoked only
 > for groups present in the batch, so an outage was detectable only *after* it
 > ended, and a device that never returned was never detected at all. Part 2 is
@@ -411,4 +411,4 @@ imports; the pre-4.x path 404s.
 
 ---
 
-[← Part 1: Arbitrary State](./07-arbitrary-stateful-legacy-part1.md) · [Next: Concept 9 — `transformWithState` →](./09-transform-with-state-part1.md)
+[← Part 1: Arbitrary State](06-arbitrary-stateful-legacy-part1.md) · [Next: Concept 7 — `transformWithState` →](07-transform-with-state-part.md)

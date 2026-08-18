@@ -1,6 +1,6 @@
 # Event-Time Windows
 
-> **Tier 2 · Concept 2 of 9**
+> **Tier 2 · Concept 2 of 7**
 > Grouping by *when* instead of *who*. Everything from streaming aggregations
 > applies; the key space gains a time dimension, and that changes the cost model.
 
@@ -264,4 +264,4 @@ Two-argument `window` = tumbling; three-argument = sliding. Stable across versio
 
 ---
 
-[← Concept 1: Streaming Aggregations](./01-streaming-aggregations.md) · [Next: Processing-Time Windows →](./03-processing-time-windows.md)
+[← Concept 1: Streaming Aggregations](./01-streaming-aggregations.md) · [Next: Watermarks Part1 →](./03-watermarks-part1.md)

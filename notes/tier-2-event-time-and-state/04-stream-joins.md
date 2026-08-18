@@ -1,6 +1,6 @@
 # Streaming Joins
 
-> **Tier 2 · Concept 5 of 9**
+> **Tier 2 · Concept 4 of 7**
 > Two kinds, and they could not be more different: stream–static is a stateless
 > per-batch join; stream–stream is a stateful buffer-and-match bounded by
 > watermarks. Everything hard lives on the stream–stream side.
@@ -219,4 +219,4 @@ migration notes rather than assuming.
 
 ---
 
-[← Concept 4: Watermarks Part 2](./04-watermarks-part2.md) · [Next: Deduplication →](./06-de-duplication.md)
+[← Concept 3: Watermarks Part 2](03-watermarks-part2.md) · [Next: Deduplication →](05-de-duplication.md)

@@ -1,6 +1,6 @@
 # Watermarks (Part 2)
 
-> **Tier 2 · Concept 5 of 9**
+> **Tier 2 · Concept 3 of 7**
 > Part 1 was one operator, one stream. Part 2 is the single new idea: what is
 > *the* watermark when the query has more than one source of it? Two faces —
 > multiple input streams, and chained operators.
@@ -151,4 +151,4 @@ when either dimension has more than one.
 
 ---
 
-[← Concept 3: Watermarks Part 1](./03-watermarks-part1.md) · [Next: Streaming Joins →](./05-streaming-joins.md)
+[← Concept 3: Watermarks Part 1](./03-watermarks-part1.md) · [Next: Streaming Joins →](./04-stream-joins.md)

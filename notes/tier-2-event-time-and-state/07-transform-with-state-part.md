@@ -1,6 +1,6 @@
 # `transformWithState`
 
-> **Tier 2 · Concept 9 of 9** — closes the tier.
+> **Tier 2 · Concept 7 of 7** — closes the tier.
 > The Spark 4.0 replacement for `mapGroupsWithState` / `flatMapGroupsWithState`.
 > C8 ended with three structural limits; this is the API built to remove them.
 > Everything below is either derived, measured, or read off the Spark source.
@@ -572,7 +572,46 @@ and never retired.
 
 
 ---
+## Typed API only
 
+Both `flatMapGroupsWithState` and `transformWithState` hang off
+`KeyValueGroupedDataset[K, V]`, produced by **`groupByKey`** — which takes a Scala
+function `V => K` and exists only on `Dataset[T]`. The untyped path
+(`df.groupBy(col(...))`) yields a `RelationalGroupedDataset`, which has `agg` and
+`pivot` and no stateful-processing methods at all.
+
+Since `DataFrame = Dataset[Row]`, a DataFrame technically compiles — and leaves you
+pattern-matching on `Row` by ordinal inside the processor. In practice the pipeline
+returns to typed before grouping:
+
+```scala
+input.toDF()
+  .withColumn("eventTime", timestamp_seconds(col("t")))
+  .withWatermark("eventTime", "1 second")
+  .as[TimedBeat]                       // untyped ops above; typed required below
+  .groupByKey(_.deviceId)
+  .transformWithState(...)
+```
+
+That is why `TimedBeat` exists: `withColumn` and `withWatermark` are DataFrame
+operations, so the chain drops to untyped and `.as[T]` restores it with a case class
+matching the widened schema.
+
+Three consequences, all already met:
+
+- **Encoders are unavoidable.** `I`, `O` and every state variable cross the
+  JVM-object ↔ Tungsten-row boundary — including the sealed-trait limitation.
+  Untyped operators never face this; everything is a `Row` with a known schema.
+- **Your logic is opaque to Catalyst.** It sees a Scala closure, not an expression
+  tree, so it cannot know what the state means or when it may be evicted. This is the
+  schema-authority table seen from the API side: `groupBy.agg` is untyped and
+  understood; `transformWithState` is typed and opaque.
+- **Serialization cost per row**, in and out — the price of arbitrary Scala logic.
+
+The constraint applies at the operator's boundary only: the output is a `Dataset[O]`,
+so downstream DataFrame operations are free.
+
+---
 ## Prove you got it
 
 1. Why must state pieces have **names** rather than positions? Give a consequence
@@ -673,4 +712,4 @@ and never retired.
 
 ---
 
-[← Concept 8 Part 2: Timeouts](./08-arbitrary-stateful-legacy-part2.md) · [Tier 2 index](./README.md)
+[← Concept 6 Part 2: Timeouts](06-arbitrary-stateful-legacy-part2.md) · [Tier 2 index](./README.md)

@@ -1,6 +1,6 @@
 # Arbitrary Stateful Processing (legacy) — Part 1
 
-> **Tier 2 · Concept 8 · Part 1 of 2**
+> **Tier 2 · Concept 6 of 7**
 > Aggregation, join, and dedup are all "keyed state + update function + eviction"
 > with the update function and the eviction rule chosen for you. Here you write
 > both. Part 1 covers arbitrary state; Part 2 covers timeouts.
@@ -408,4 +408,4 @@ Requirements 1 and 2 are untouched; 3 fires only late.
 
 ---
 
-[← Concept 7: Deduplication](./06-de-duplication.md) · [Next: Part 2 — Timeouts →](./08-arbitrary-stateful-legacy-part2.md)
+[← Concept 5: Deduplication](05-de-duplication.md) · [Next: Part 2 — Timeouts →](06-arbitrary-stateful-legacy-part2.md)

@@ -1,6 +1,6 @@
 # Deduplication
 
-> **Tier 2 · Concept 6 of 9**
+> **Tier 2 · Concept 5 of 7**
 > A light concept and a direct payoff of the watermark work. Dedup is a keyed
 > state set; the only question is when a key can be forgotten — and that's the
 > watermark, again.
@@ -184,4 +184,4 @@ subset) is the current-expertise signal.
 
 ---
 
-[← Concept 5: Streaming Joins](./05-stream-joins.md) · [Next: Arbitrary Stateful Processing (legacy) →](./07-arbitrary-stateful-legacy-part1.md)
+[← Concept 4: Streaming Joins](04-stream-joins.md) · [Next: Arbitrary Stateful Processing (legacy) →](06-arbitrary-stateful-legacy-part1.md)

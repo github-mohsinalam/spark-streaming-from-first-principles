@@ -1,6 +1,6 @@
 # Watermarks (Part 1)
 
-> **Tier 2 · Concept 3 of 9**
+> **Tier 2 · Concept 3 of 7**
 > The rule that decides when a window is finished. Everything here is either
 > derived, or read off the Spark source — not inferred from the docs, which are
 > imprecise on the one point that matters most.
@@ -334,4 +334,4 @@ This settles three rules we previously took on faith:
 
 ---
 
-[← Concept 2: Event-Time Windows](./02-event-time-windows.md) · [Next: Watermarks Part 2 →](./04-watermarks-part2.md)
+[← Concept 2: Event-Time Windows](./02-event-time-windows.md) · [Next: Watermarks Part 2 →](03-watermarks-part2.md)
