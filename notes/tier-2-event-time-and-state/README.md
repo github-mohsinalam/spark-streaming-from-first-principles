@@ -10,19 +10,19 @@ runnable demo, and sourced to the Spark code.
 
 ## Concepts
 
-| # | Concept | Notes | Demo |
-|---|---|---|---|
-| 1 | **Streaming Aggregations** — `groupBy.agg` as an incremental fold; unbounded state without eviction | [`01-streaming-aggregations`](./01-streaming-aggregations.md) | — |
-| 2 | **Event-Time Windows** — `window()` as a time-interval group key; tumbling vs sliding | [`02-event-time-windows`](./02-event-time-windows.md) | — |
-| 3 | **Watermarks** — the eviction rule, and what governs it when there is more than one | [`3-watermarks-part1`](./03-watermarks-part1.md) · [`03-watermarks-part2`](./03-watermarks-part2.md) | `WatermarkMemoryStreamDemo` |
-| 4 | **Streaming Joins** — stream–static is stateless; stream–stream is a symmetric hash join bounded by watermarks | [`04-stream-joins`](./04-stream-joins.md) | `StreamStreamJoinDemo` |
-| 5 | **Deduplication** — a keyed state set, and when a key may be forgotten | [`05-de-duplication`](./05-de-duplication.md) | `DropDuplicatesWithinWatermarkDemo` |
-| 6 | **Arbitrary Stateful Processing (legacy)** — `flatMapGroupsWithState`: you write the update function and manage eviction | [`06-arbitrary-stateful-legacy-part1`](./06-arbitrary-stateful-legacy-part1.md) · [`06-arbitrary-stateful-legacy-part2`](./06-arbitrary-stateful-legacy-part2.md) | `HeartbeatNoTimeoutDemo` · `HeartbeatEventTimeTimeoutDemo` |
-| 7 | **`transformWithState`** — the Spark 4.0 replacement: composite state, timers, TTL | [`07-transform-with-state`](./07-transform-with-state.md) | `HeartbeatTransformWithStateDemo` |
+| # | Concept | Notes | Demo                                                                                                                                                                                            |
+|---|---|---|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | **Streaming Aggregations** — `groupBy.agg` as an incremental fold; unbounded state without eviction | [`01-streaming-aggregations`](./01-streaming-aggregations.md) | —                                                                                                                                                                                               |
+| 2 | **Event-Time Windows** — `window()` as a time-interval group key; tumbling vs sliding | [`02-event-time-windows`](./02-event-time-windows.md) | —                                                                                                                                                                                               |
+| 3 | **Watermarks** — the eviction rule, and what governs it when there is more than one | [`3-watermarks-part1`](./03-watermarks-part1.md) · [`03-watermarks-part2`](./03-watermarks-part2.md) | [WatermarkMemoryStreamDemo](../../src/main/scala/demos/tier2/WatermarkMemoryStreamDemo.scala)                                                                                                   |
+| 4 | **Streaming Joins** — stream–static is stateless; stream–stream is a symmetric hash join bounded by watermarks | [`04-stream-joins`](./04-stream-joins.md) | [StreamStreamJoinDemo](../../src/main/scala/demos/tier2/StreamStreamJoinDemo.scala)                                                                                                             |
+| 5 | **Deduplication** — a keyed state set, and when a key may be forgotten | [`05-de-duplication`](./05-de-duplication.md) | [DropDuplicatesWithinWatermarkDemo](../../src/main/scala/demos/tier2/DropDuplicatesWithinWatermarkDemo.scala)                                                                                   |
+| 6 | **Arbitrary Stateful Processing (legacy)** — `flatMapGroupsWithState`: you write the update function and manage eviction | [`06-arbitrary-stateful-legacy-part1`](./06-arbitrary-stateful-legacy-part1.md) · [`06-arbitrary-stateful-legacy-part2`](./06-arbitrary-stateful-legacy-part2.md) | [HeartbeatNoTimeoutDemo](../../src/main/scala/demos/tier2/HeartbeatNoTimeoutDemo.scala) · [HeartbeatEventTimeTimeoutDemo](../../src/main/scala/demos/tier2/HeartbeatEventTimeTimeoutDemo.scala) |
+| 7 | **`transformWithState`** — the Spark 4.0 replacement: composite state, timers, TTL | [`07-transform-with-state`](./07-transform-with-state.md) | [HeartbeatTransformWithStateDemo](../../src/main/scala/demos/tier2/HeartbeatTransformWithStateDemo.scala)                                                                                                                                                       |
 
 
 **Probes** (throwaway, kept for the findings they produced):
-`TwsTtlProbe` — TTL is per-element on `ListState`, scoped to the variable.
+[TwsTtlProbe](../../src/main/scala/demos/tier2/TwsTtlProbe.scala) — TTL is per-element on `ListState`, scoped to the variable.
 
 ---
 
