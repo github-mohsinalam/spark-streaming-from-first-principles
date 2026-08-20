@@ -1,8 +1,7 @@
 # Spark Streaming, From First Principles
 
 Notes and mental models for going from *"I know batch Spark"* to *"I can design and
-operate production streaming pipelines."* Built while working through the
-[Rock-the-JVM](https://courses.rockthejvm.com/p/the-spark-bundle) **"Spark Streaming with Scala"** course and a beginner → senior Data
+operate production streaming pipelines."* Built while working through a beginner → senior Data
 Engineer roadmap, with everything **derived, not asserted** — the goal is correct
 mental models you can re-derive, not facts you memorize.
 
@@ -13,17 +12,19 @@ mental models you can re-derive, not facts you memorize.
 
 ## How this repo is organized
 
-- **`notes/`** — one folder per tier of the roadmap, one markdown file per concept.
+- **`notes/`** — one folder per tier of the roadmap, one Markdown file per concept.
   Each tier folder has a short `README.md` index; each concept file ends with a
   **"Prove you got it"** self-check (answers in a collapsible block).
 - **`src/main/scala/demos/`** — runnable Scala demos that empirically verify the
   concepts. Standard sbt layout. Each demo's tier folder mirrors the notes
   hierarchy (`demos/tier1/output_modes/`, etc.).
-- **`build.sbt`** — pinned to Scala 2.13.16, Spark 4.0.0, Delta 4.0.0; JDK 17+.
+- **`build.sbt`** — pinned to Scala 2.13.18, Spark 4.1.2, Delta 4.3.1; JDK 17+.
 
-Setup: `sbt compile` from the repo root resolves dependencies. Demos read from
-a local Kafka broker on `localhost:9092` and write to local Delta tables under
-`/tmp/`.
+Setup: `sbt compile` from the repo root resolves dependencies. Tier 1 demos read
+from a local Kafka broker on `localhost:9092` and write to local Delta tables under
+`/tmp/`. Tier 2 demos are self-contained — they drive a `MemoryStream` so every
+trace is reproducible without external infrastructure. `transformWithState`
+(Tier 2, Concept 7) additionally requires the RocksDB state store provider.
 
 ---
 
@@ -60,11 +61,25 @@ The everyday API of Structured Streaming, derived from first principles.
 Includes runnable demos at `src/main/scala/demos/tier1/` covering Delta as a
 streaming sink (Concept 4.5) and output modes (Concept 5).
 
-### ⬜ Tier 2 — Event Time & State
+### ✅ [Tier 2 — Event Time & State](./notes/tier-2-event-time-and-state/README.md)
 
-Streaming aggregations, event-time/session/processing-time windows, **watermarks**,
-streaming joins, deduplication, arbitrary stateful processing (legacy
-`mapGroupsWithState` and the modern Spark 4.0 `transformWithState`).
+The heart of Structured Streaming: when an event happened, what the engine must
+remember, and when it may forget. **Status: complete.**
+
+1. [Streaming Aggregations](./notes/tier-2-event-time-and-state/01-streaming-aggregations.md)
+2. [Event-Time Windows](./notes/tier-2-event-time-and-state/02-event-time-windows.md)
+3. Watermarks — [Part 1](./notes/tier-2-event-time-and-state/03-watermarks-part1.md) · [Part 2](./notes/tier-2-event-time-and-state/03-watermarks-part2.md)
+4. [Streaming Joins](./notes/tier-2-event-time-and-state/04-stream-joins.md)
+5. [Deduplication](./notes/tier-2-event-time-and-state/05-de-duplication.md)
+6. Arbitrary Stateful Processing (legacy) — [Part 1](./notes/tier-2-event-time-and-state/06-arbitrary-stateful-legacy-part1.md) · [Part 2](./notes/tier-2-event-time-and-state/06-arbitrary-stateful-legacy-part2.md)
+7. [Arbitrary Stateful Processing (V2 API)](./notes/tier-2-event-time-and-state/07-transform-with-state.md)
+
+Concepts 1–5 are the engine's built-in stateful operators, which turn out to be one
+machine — *keyed state + an update function + an eviction rule* — with the update
+function and the eviction rule chosen for you. Concepts 6–7 are where you take that
+machine over.
+
+Runnable demos at `src/main/scala/demos/tier2/`.
 
 ### ⬜ Tier 3 — Integrations & the Lakehouse
 
@@ -106,4 +121,6 @@ event-time/state semantics.** It does **not** cover production engineering
 
 ## Status
 
-Tier 0 and Tier 1 complete. Tier 2 (Event Time & State) next.
+Tiers 0, 1 and 2 complete. **Tier 3 (Integrations & the Lakehouse) next** — Kafka
+depth, Schema Registry + Avro, `foreachBatch` patterns, idempotent JDBC upserts,
+Delta as both streaming source and sink, and CDC.
