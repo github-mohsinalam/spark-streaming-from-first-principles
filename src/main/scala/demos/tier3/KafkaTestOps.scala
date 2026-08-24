@@ -78,23 +78,26 @@ object KafkaTestOps {
     withAdmin(_.describeTopics(List(topic).asJava).allTopicNames().get().get(topic).partitions().size())
 
   /**
-   * Consumer-group offsets committed to Kafka, for every group whose id starts
-   * with `prefix`. Spark's Kafka source uses the prefix "spark-kafka-source".
-   * Used to demonstrate that the set is empty.
+   * Any consumer group in the cluster holding committed offsets for `topic`.
+   * The claim we actually want is: NOBODY has committed offsets for this
+   * topic, so no group-based lag monitoring can work regardless of naming.
    */
-  def committedOffsetsForGroupPrefix(prefix: String): Map[String, Map[TopicPartition, Long]] =
+  def anyGroupWithOffsetsFor(topic: String): Map[String, Map[TopicPartition, Long]] =
     withAdmin { a =>
-      val groups = a.listConsumerGroups().all().get().asScala
-        .map(_.groupId()).filter(_.startsWith(prefix)).toList
-      groups.flatMap { g =>
+      a.listConsumerGroups().all().get().asScala.map(_.groupId()).toList.flatMap { g =>
         Try {
           val offs = a.listConsumerGroupOffsets(g)
             .partitionsToOffsetAndMetadata().get().asScala
+            .filter { case (tp, _) => tp.topic() == topic }
             .map { case (tp, om) => tp -> om.offset() }.toMap
           if (offs.isEmpty) None else Some(g -> offs)
         }.getOrElse(None)
       }.toMap
     }
+
+  /** Every consumer group id the cluster knows about, for context in the trace. */
+  def allGroupIds(): Seq[String] =
+    withAdmin(_.listConsumerGroups().all().get().asScala.map(_.groupId()).toList.sorted)
 
   // ------------------------------------------------------------- produce ---
 
