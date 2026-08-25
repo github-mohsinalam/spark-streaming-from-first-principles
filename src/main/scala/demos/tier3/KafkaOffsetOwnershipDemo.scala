@@ -390,7 +390,7 @@ object KafkaOffsetOwnershipDemo {
   }
 
   def main(args: Array[String]): Unit = {
-    val stage = args.headOption.getOrElse("stage2b")
+    val stage = args.headOption.getOrElse("stage1")
     try {
       stage match {
         case "stage1" => stage1()
