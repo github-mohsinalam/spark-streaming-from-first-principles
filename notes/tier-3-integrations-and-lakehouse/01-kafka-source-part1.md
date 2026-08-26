@@ -406,10 +406,32 @@ question is not "how fast do I want to go" but:
 
 ### The companion limits
 
-- `minOffsetsPerTrigger` + `maxTriggerDelay` — the dual problem, batches so small
-  that fixed per-batch cost dominates. Composed as a `CompositeReadLimit`: the min
-  decides *whether* to run a batch (a skip decision), the max decides *how big*.
-  `ReadAllAvailable` outranks both. [1]
+- `minOffsetsPerTrigger` + `maxTriggerDelay` — the dual problem: batches so small
+  that fixed per-batch cost (planning, offset fetch, log writes, task launch,
+  sink commit) dominates. Composed as a `CompositeReadLimit`, and resolved in one
+  `orElse` chain: the min decides *whether* to run a batch, the max decides *how
+  big*. `ReadAllAvailable` outranks both. [1]
+
+  **It is a skip decision, not a throttle.** When `delayBatch` says wait,
+  `latestOffset` returns `startPartitionOffsets` — the position unchanged — so the
+  range is empty and no batch is constructed. The `orElse` means `rateLimit` is
+  never reached on a skipped trigger: **min and max never both apply to the same
+  trigger.** Corollary worth stating because the opposite is the natural
+  assumption: **the floor only ever delays a batch, it never grows one.**
+
+  A bare minimum would strand the last few records forever, so it needs a timeout,
+  and the timeout is checked **first** — elapsed time past `maxTriggerDelay`
+  triggers regardless of count. Default is **15 minutes**
+  (`DEFAULT_MAX_TRIGGER_DELAY`), so setting `minOffsetsPerTrigger` alone silently
+  accepts up to 15 minutes of latency on a quiet stream. Read the pair as one
+  sentence: *wait for at least N records, but never longer than T.*
+
+  Two things about `lastTriggerMillis`, the wall-clock instant of the last
+  **admitted** trigger (skipped triggers still fire; they just don't update it):
+  it is a plain uncheckpointed `var` initialised to `0L`, so **the first trigger
+  after any restart always passes the delay check**; and the whole mechanism is
+  processing-time, unrelated to watermarks and **not reproducible on replay** —
+  two runs over identical data can produce different batch boundaries. [1]
 - `maxRecordsPerPartition` is **not** a rate limit despite the name — it is
   consumed by `KafkaOffsetRangeCalculator` to split a partition's range across
   more Spark tasks. A parallelism knob. Part 2.
