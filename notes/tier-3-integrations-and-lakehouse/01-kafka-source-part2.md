@@ -266,7 +266,8 @@ which release introduced `maxRecordsPerPartition` (present in 4.1.2). No behavio
    the batch is 60 records or 60M, so during catch-up each task is huge — no help
    when you need it. `maxRecordsPerPartition` bounds task *size*, so task size is
    the same in steady state and recovery; parallelism scales with the backlog
-   automatically.
+   automatically. `maxRecordsPerPartition` holds task size constant and lets task count vary with the backlog.
+   `minPartitions` holds task count constant and lets task size vary with the backlog.
 3. Stage 2 only (no `maxRecordsPerPartition`). Phase A: `p0 round(800/810 × 8) =
    round(7.9) = 8 → split`; p1,p2 → 1 → unsplit. Phase B: budget `max(8−2,1)=6`,
    splitTotal 800. Phase C: p0 `round(800/800 × 6)=6`; p1,p2 →1. **8 tasks.**
